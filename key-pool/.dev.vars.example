@@ -1,0 +1,18 @@
+# 本地开发环境变量配置示例
+# 复制本文件为 .dev.vars 后填入实际值，不要提交 .dev.vars 到 git
+
+# JWT 签名密钥 - 必须使用足够长的随机字符串
+JWT_SECRET="please-replace-with-a-very-long-random-string-at-least-32-chars"
+
+# API Key / AIG Token 加密密钥（AES-GCM 256-bit，强随机）
+# 不配置则降级为 base64（仅本地开发，不安全，会在日志告警）
+KEY_ENCRYPTION_KEY="please-replace-with-another-very-long-random-string-at-least-32-chars"
+
+# 超级管理员初始化密码（首次部署后请登录修改）
+ADMIN_INIT_PASSWORD="Admin@123456"
+
+# 管理员初始化用户名
+ADMIN_INIT_USERNAME="admin"
+
+# 默认日志级别
+LOG_LEVEL="debug"
