@@ -1,0 +1,42 @@
+name = "key-pool"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+compatibility_flags = ["nodejs_compat"]
+
+# 观测日志（免费）
+[observability]
+enabled = true
+
+# === Cloudflare D1 数据库绑定 ===
+# 部署前请先执行 `wrangler d1 create key-pool-db` 并把下面的 database_id 替换为返回的真实值
+[[d1_databases]]
+binding = "DB"
+database_name = "key-pool-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# === Cloudflare KV 命名空间绑定 ===
+# 部署前请先执行 `wrangler kv namespace create "HEALTH_KV"` 与 `wrangler kv namespace create "HEALTH_KV" --preview`
+# 把返回的 id 填到下面（preview 用于本地调试）
+[[kv_namespaces]]
+binding = "HEALTH_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"
+
+# === 定时任务：定时健康探测 ===
+[triggers]
+crons = ["*/5 * * * *"]
+
+# === Workers 免费套餐限制 ===
+# 10ms CPU 时间 / 请求（可付费提高）
+# 100,000 请求 / 天
+# 注意：本配置使用全部免费额度内的功能
+
+[vars]
+# 公共配置
+LOG_LEVEL = "info"
+DEFAULT_TIMEOUT_MS = "30000"
+COOLING_BASE_SECONDS = "30"
+COOLING_MAX_SECONDS = "1800"
+COOLING_FAILURE_THRESHOLD = "5"
+HEALTH_CHECK_INTERVAL_MINUTES = "5"
