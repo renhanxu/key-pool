@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  color-scheme: light;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #FFF0F5 0%, #FFFBF5 50%, #F0F8FF 100%);
+  min-height: 100vh;
+  color: #4A4A4A;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FFF0F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #FFB6C1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FF8FAB;
+}
+
+/* 通用按钮风格 */
+.btn-primary {
+  @apply px-4 py-2 bg-pink-400 text-white rounded-xl font-medium shadow-soft hover:bg-pink-500 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-white text-pink-500 border-2 border-pink-200 rounded-xl font-medium hover:bg-pink-50 hover:border-pink-300 transition-all duration-200;
+}
+
+.btn-ghost {
+  @apply px-3 py-1.5 text-pink-500 hover:bg-pink-50 rounded-lg transition-colors;
+}
+
+.card {
+  @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-card p-6 border border-pink-100;
+}
+
+.input {
+  @apply w-full px-3 py-2 bg-white border-2 border-pink-100 rounded-xl focus:outline-none focus:border-pink-300 focus:ring-2 focus:ring-pink-100 transition-all;
+}
+
+.label {
+  @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-healthy {
+  @apply bg-green-100 text-green-700;
+}
+
+.badge-cooling {
+  @apply bg-yellow-100 text-yellow-700;
+}
+
+.badge-disabled {
+  @apply bg-red-100 text-red-700;
+}
+
+.badge-enabled {
+  @apply bg-pink-100 text-pink-700;
+}
+
+.badge-disabled-status {
+  @apply bg-gray-100 text-gray-500;
+}
