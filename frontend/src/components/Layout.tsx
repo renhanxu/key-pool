@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -13,6 +13,8 @@ import {
   RefreshCw,
   Sparkles,
   ChevronDown,
+  Menu,
+  X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -54,16 +56,45 @@ export default function Layout() {
 
   const isAdmin = me?.role === "admin";
 
+  // 路由切换时自动收起移动端抽屉
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen flex">
-      {/* 侧边栏 */}
-      <aside className="w-64 bg-white/80 backdrop-blur-sm border-r border-pink-100 p-4 flex flex-col">
-        <div className="flex items-center gap-2 mb-8 px-2">
-          <Sparkles className="w-8 h-8 text-pink-400" />
-          <div>
-            <h1 className="text-lg font-bold text-pink-600">密钥池</h1>
-            <p className="text-xs text-gray-500">Key Pool</p>
+      {/* 移动端遮罩层 */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-30 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      {/* 侧边栏：桌面端固定显示，移动端为可收起抽屉 */}
+      <aside
+        className={cn(
+          "w-64 bg-white/80 backdrop-blur-sm border-r border-pink-100 p-4 flex flex-col",
+          "fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 ease-in-out",
+          "lg:static lg:translate-x-0",
+          menuOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between mb-8 px-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-8 h-8 text-pink-400" />
+            <div>
+              <h1 className="text-lg font-bold text-pink-600">密钥池</h1>
+              <p className="text-xs text-gray-500">Key Pool</p>
+            </div>
           </div>
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="lg:hidden btn-ghost p-1"
+            title="收起菜单"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <nav className="flex-1 space-y-1">
@@ -179,7 +210,21 @@ export default function Layout() {
       </aside>
 
       {/* 主内容区 */}
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-4 lg:p-6 min-w-0">
+        {/* 移动端顶部栏（含菜单按钮） */}
+        <div className="lg:hidden flex items-center gap-2 mb-4 sticky top-0 -mt-4 pt-4 bg-gradient-to-b from-[#FFF0F5] via-[#FFF0F5] to-transparent z-20">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="btn-ghost p-2 -ml-2"
+            title="打开菜单"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-pink-400" />
+            <span className="font-bold text-pink-600">密钥池</span>
+          </div>
+        </div>
         <Outlet />
       </main>
     </div>

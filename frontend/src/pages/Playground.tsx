@@ -83,8 +83,10 @@ export default function Playground() {
     const assistantMsg: Message = { role: "assistant", content: "" };
     setMessages([...newMessages, assistantMsg]);
 
+    // 使用配置的 API 基地址（与 api.ts 一致），避免相对路径打到前端域名导致返回 HTML
+    const base = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
     try {
-      const res = await fetch("/playground/test", {
+      const res = await fetch(`${base}/playground/test`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,19 +100,38 @@ export default function Playground() {
         }),
       });
 
+      const text = await res.text();
       if (!res.ok) {
-        const err = await res.json();
-        toast.error(err.error?.message || "请求失败");
-        setMessages(messages);
+        let msg = "请求失败";
+        try {
+          const e = JSON.parse(text);
+          msg = e.error?.message || e.message || msg;
+        } catch {
+          msg = text ? text.slice(0, 200) : `请求失败（HTTP ${res.status}）`;
+        }
+        toast.error(msg);
+        // 出错时回滚到“用户提问 + 空助手”之前的状态，避免对话被清空
+        setMessages(newMessages);
         return;
       }
 
-      const data = await res.json();
-      const reply = data.data?.response?.choices?.[0]?.message?.content || "(无回复)";
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        toast.error("返回内容不是合法 JSON，无法解析回复");
+        setMessages(newMessages);
+        return;
+      }
+      const reply =
+        data?.data?.response?.choices?.[0]?.message?.content ||
+        data?.choices?.[0]?.message?.content ||
+        "(无回复)";
       const updated = [...newMessages, { role: "assistant" as const, content: reply }];
       setMessages(updated);
     } catch (err: any) {
-      toast.error(err.message || "请求失败");
+      toast.error(err?.message || "网络请求失败");
+      setMessages(newMessages);
     } finally {
       setLoading(false);
     }

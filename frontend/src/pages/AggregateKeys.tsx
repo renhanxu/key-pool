@@ -87,6 +87,15 @@ export default function AggregateKeys() {
         </div>
       )}
 
+      {/* 外部调用指南：baseURL 可一键复制，便于接入 codex 等工具 */}
+      <div className="card">
+        <div className="flex items-center gap-2 mb-3">
+          <Share2 className="w-4 h-4 text-pink-500" />
+          <span className="font-semibold text-pink-600">🌐 外部调用指南（把聚合密钥接入 codex / OpenAI SDK / curl）</span>
+        </div>
+        <ApiUsageCard />
+      </div>
+
       <div className="card">
         {isLoading ? (
           <div className="text-center py-12 text-gray-400">加载中...</div>
@@ -196,6 +205,98 @@ export default function AggregateKeys() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+// === 外部调用示例（baseURL 可复制，便于接入 codex / OpenAI SDK / curl）===
+function ApiUsageCard({ apiKey }: { apiKey?: string }) {
+  // 展示/复制用的 baseURL：优先用「外部域名」环境变量；未配置时回退到真实请求基地址（VITE_API_BASE_URL，即 CF 自动分配域名）。
+  // ⚠️ 此处仅用于「外部调用指南」卡片显示与复制，真实请求（api.ts / Playground.tsx）仍走 VITE_API_BASE_URL，互不影响。
+  const API_BASE =
+    (import.meta.env.VITE_EXTERNAL_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || "https://api.yuan2006.cc.cd").replace(/\/$/, "");
+  const API_V1 = `${API_BASE}/v1`;
+  const displayKey = apiKey || "<你的聚合密钥 sk-xxxx>";
+
+  const sdkSnippet = `import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "${API_V1}",
+  apiKey: "${displayKey}",
+});
+
+const res = await client.chat.completions.create({
+  model: "你的模型别名",
+  messages: [{ role: "user", content: "你好" }],
+});
+console.log(res.choices[0].message.content);`;
+
+  const curlSnippet = `curl ${API_V1}/chat/completions \\
+  -H "Authorization: Bearer ${displayKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "你的模型别名",
+    "messages": [{ "role": "user", "content": "你好" }]
+  }'`;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="text-sm font-medium text-gray-700 mb-1">① API 基地址（baseURL）</div>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 px-3 py-2 bg-pink-50 rounded-lg font-mono text-sm break-all">
+            {API_V1}
+          </code>
+          <button
+            onClick={() => {
+              copyToClipboard(API_V1);
+              toast.success("已复制 baseURL");
+            }}
+            className="btn-primary flex items-center gap-1 shrink-0"
+          >
+            <Copy className="w-4 h-4" /> 复制
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div className="text-sm font-medium text-gray-700 mb-1">② 在 codex / OpenAI SDK 中调用</div>
+        <CodeBlock code={sdkSnippet} />
+      </div>
+
+      <div>
+        <div className="text-sm font-medium text-gray-700 mb-1">③ 或用 curl 测试</div>
+        <CodeBlock code={curlSnippet} />
+      </div>
+
+      <p className="text-xs text-gray-400">
+        💡 baseURL 末尾已含 <code>/v1</code>，SDK 会自动拼接 <code>/chat/completions</code>，请勿重复写。
+        模型名填你在「聚合密钥 → 绑定」里设置的<strong>模型别名</strong>；鉴权用 Bearer + 聚合密钥。
+      </p>
+    </div>
+  );
+}
+
+// 带一键复制的代码块
+function CodeBlock({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="relative">
+      <pre className="bg-gray-900 text-gray-100 rounded-xl p-3 pr-12 text-xs leading-relaxed overflow-x-auto max-h-64">
+        <code>{code}</code>
+      </pre>
+      <button
+        onClick={() => {
+          copyToClipboard(code);
+          setCopied(true);
+          toast.success("已复制到剪贴板");
+          setTimeout(() => setCopied(false), 1500);
+        }}
+        className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/15 hover:bg-white/30 text-white transition-colors"
+        title="复制代码"
+      >
+        <Copy className="w-4 h-4" />
+      </button>
     </div>
   );
 }
@@ -637,8 +738,12 @@ function NewKeyDialog({ plainKey, onClose }: { plainKey: string; onClose: () => 
             复制
           </button>
         </div>
-        <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
-          💡 使用方式：在 OpenAI SDK 中设置 <code>baseURL</code> 为 <code>https://你的Workers域名/v1</code>，<code>apiKey</code> 为此 Key；SDK 会自动拼接 <code>/chat/completions</code>（**baseURL 末尾不要带 /chat/completions**）。
+        <div className="mt-4 border border-pink-100 rounded-xl p-4 bg-pink-50/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Share2 className="w-4 h-4 text-pink-500" />
+            <span className="font-semibold text-pink-600">🌐 外部调用示例（复制到 codex / OpenAI SDK / curl）</span>
+          </div>
+          <ApiUsageCard apiKey={plainKey} />
         </div>
         <div className="mt-4 flex justify-end">
           <button onClick={onClose} className="btn-primary">我已保存</button>

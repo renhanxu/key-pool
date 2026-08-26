@@ -416,6 +416,35 @@ wrangler d1 export key-pool-db --output=backup.sql
 
 免费额度同样支持自定义域名，**不强制要求**，用默认的 `*.workers.dev` 域名就够用。
 
+### 7. 更换 / 切换对外域名（展示与真实请求分离）
+
+「聚合密钥」页对外提供的 baseURL（复制给 codex / OpenAI SDK / curl 用）与前端自身真正发起的请求，**走的是两个独立变量**，所以换域名时只需动一处，不会影响后台正常使用：
+
+| 变量 | 用途 | 典型值 |
+|---|---|---|
+| `VITE_API_BASE_URL` | **真实请求**：登录、列表、测试台、所有接口调用 | CF 自动分配的 `https://key-pool.<sub>.workers.dev`（建议长期保留，最稳） |
+| `VITE_EXTERNAL_API_BASE_URL` | **仅展示/复制**：聚合密钥页「外部调用指南」卡片里显示的 baseURL | 你的对外域名，如 `https://api.example.com` |
+
+> 设计意图：`VITE_API_BASE_URL` 保留为 CF 自动分配的 `*.workers.dev`，这样即使自定义域名（DNS / 证书）出故障，管理后台自身依然能正常连后端；只有"对外发布的接入地址"用自定义域名，二者解耦。
+
+**以后想换对外域名，只需两步：**
+
+1. 修改 `frontend/.env.production`，把 `VITE_EXTERNAL_API_BASE_URL` 改成新域名（保留 `VITE_API_BASE_URL` 那行不动）：
+   ```ini
+   VITE_API_BASE_URL=https://key-pool.<sub>.workers.dev
+   VITE_EXTERNAL_API_BASE_URL=https://新域名
+   ```
+2. 重新部署前端：
+   ```bash
+   cd frontend
+   npm run build
+   wrangler pages deploy dist --project-name=key-pool-frontend
+   ```
+
+⚠️ **如果你前端的 `VITE_API_BASE_URL` 是在 Cloudflare Pages 控制台 → Settings → Environment variables 里设置的（而非只用仓库 `.env.production`）**，那么 `VITE_EXTERNAL_API_BASE_URL` 也必须在控制台同一处补一条同名的变量再重部署，否则该变量不会注入到构建产物，卡片仍会回退显示 `VITE_API_BASE_URL`。
+
+> 在代码里，`VITE_EXTERNAL_API_BASE_URL` 仅在 `frontend/src/pages/AggregateKeys.tsx` 的 `ApiUsageCard` 组件中被读取（取值优先级：`VITE_EXTERNAL_API_BASE_URL` → `VITE_API_BASE_URL` → 兜底字符串）；`api.ts` 与 `Playground.tsx` 的真实请求始终用 `VITE_API_BASE_URL`，不受对外域名切换影响。
+
 ---
 
 ## 十、Cloudflare 免费额度详解

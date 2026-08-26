@@ -12,7 +12,7 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "key-pool-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "161b4507-3b05-4dc7-a4c7-0b894529e1f8"
 migrations_dir = "migrations"
 
 # === Cloudflare KV 命名空间绑定 ===
@@ -20,8 +20,8 @@ migrations_dir = "migrations"
 # 把返回的 id 填到下面（preview 用于本地调试）
 [[kv_namespaces]]
 binding = "HEALTH_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
-preview_id = "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"
+id = "da27493c13844d56a3d3f350821bc2b7"
+preview_id = "68630cc9747b41eea6ae5fc026b49fda"
 
 # === 定时任务：定时健康探测 ===
 [triggers]

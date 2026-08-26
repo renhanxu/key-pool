@@ -162,9 +162,40 @@ playgroundRouter.post("/test", requireAuth, async (c) => {
       headers.set("X-Used-Key", selectedKey.keyMasked);
       return new Response(res.body, { status: 200, headers });
     }
-    
-    // 非流式：返回完整 JSON
-    const json = await res.json() as any;
+
+    // 非流式：先按文本读取，避免上游返回空体 / 非 JSON 时
+    // 直接 await res.json() 抛错，进而把 500 的 JSON 当空体返回给前端
+    // （这也是“Unexpected end of JSON input”在 CF 上出现的根因之一）。
+    const rawText = await res.text();
+    if (!rawText || rawText.trim().length === 0) {
+      return c.json({
+        success: false,
+        error: {
+          statusCode: res.status,
+          message: "上游返回了空响应（可能是模型超时或网关异常）",
+          type: "upstream_empty",
+        },
+        latencyMs,
+        usedKeyMasked: selectedKey.keyMasked,
+      }, 502);
+    }
+
+    let json: any;
+    try {
+      json = JSON.parse(rawText);
+    } catch {
+      return c.json({
+        success: false,
+        error: {
+          statusCode: res.status,
+          message: "上游返回了非 JSON 响应：" + rawText.slice(0, 300),
+          type: "upstream_invalid",
+        },
+        latencyMs,
+        usedKeyMasked: selectedKey.keyMasked,
+      }, 502);
+    }
+
     return c.json(ok({
       response: json,
       latencyMs,
